@@ -39,11 +39,11 @@ export function PretextBasicsDemo() {
       title="Height Without DOM"
       summary="Measure text height using pure arithmetic, no DOM layout and no reflow. prepareWithSegments() caches once, and layoutWithLines() is the cheap hot path."
     >
-      <div className="grid gap-8 lg:grid-cols-[minmax(0,1.1fr)_minmax(320px,0.9fr)]">
+      <div className="grid gap-6 lg:grid-cols-[minmax(0,1.1fr)_minmax(320px,0.9fr)] lg:gap-8">
         <div>
           <div>
-            <p className="text-lg font-semibold text-slate-900">Width</p>
-            <p className="mt-2 text-3xl font-semibold text-indigo-600">{width}px</p>
+            <p className="text-base font-semibold text-slate-900 sm:text-lg">Width</p>
+            <p className="mt-2 text-2xl font-semibold text-indigo-600 sm:text-3xl">{width}px</p>
             <input
               type="range"
               min={MIN_WIDTH}
@@ -55,28 +55,32 @@ export function PretextBasicsDemo() {
           </div>
 
           <label className="mt-6 block">
-            <span className="text-lg font-semibold text-slate-900">Text</span>
+            <span className="text-base font-semibold text-slate-900 sm:text-lg">Text</span>
             <textarea
               value={text}
               onChange={(event) => setText(event.target.value)}
               rows={5}
-              className="mt-3 w-full rounded-[18px] border border-slate-200 bg-slate-50 px-4 py-4 text-lg leading-8 text-slate-900 outline-none transition focus:border-indigo-400 focus:bg-white"
+              className="mt-3 w-full rounded-[18px] border border-slate-200 bg-slate-50 px-4 py-4 text-base leading-7 text-slate-900 outline-none transition focus:border-indigo-400 focus:bg-white sm:text-lg sm:leading-8"
             />
           </label>
         </div>
 
-        <div>
-          <div className="flex items-end gap-3">
+        <div className="min-w-0">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-end">
             <div
-              className="rounded-[18px] border border-slate-200 bg-slate-50 px-4 py-4 text-[18px] leading-12 text-slate-900"
-              style={{ width: `${width}px`, lineHeight: `${PRETEXT_LINE_HEIGHT}px` }}
+              className="w-full rounded-[18px] border border-slate-200 bg-slate-50 px-4 py-4 text-[16px] text-slate-900 sm:text-[18px]"
+              style={{
+                maxWidth: `${width}px`,
+                lineHeight: `${PRETEXT_LINE_HEIGHT}px`,
+              }}
             >
               {lines.map((line, index) => (
                 <div key={`${index}-${line.text}`}>{line.text}</div>
               ))}
             </div>
-            <div className="flex min-h-[120px] w-11 items-center justify-center rounded-[14px] bg-indigo-500 px-2 text-center text-sm font-semibold text-white">
-              <span className="[writing-mode:vertical-rl] rotate-180">{height}px</span>
+            <div className="flex h-12 w-full items-center justify-center rounded-[14px] bg-indigo-500 px-2 text-center text-sm font-semibold text-white sm:min-h-[120px] sm:w-11">
+              <span className="sm:hidden">{height}px tall</span>
+              <span className="hidden [writing-mode:vertical-rl] rotate-180 sm:block">{height}px</span>
             </div>
           </div>
 
@@ -88,8 +92,8 @@ export function PretextBasicsDemo() {
         </div>
       </div>
 
-      <pre className="mt-8 overflow-auto rounded-[20px] bg-[#1f1b46] px-5 py-5 text-[14px] leading-7 text-indigo-100">
-        <code>{codeSnippet}</code>
+      <pre className="mt-8 overflow-hidden rounded-[20px] bg-[#1f1b46] px-4 py-4 text-[12px] leading-6 text-indigo-100 sm:px-5 sm:py-5 sm:text-[14px] sm:leading-7">
+        <code className="whitespace-pre-wrap break-all">{codeSnippet}</code>
       </pre>
     </DemoAccordion>
   )

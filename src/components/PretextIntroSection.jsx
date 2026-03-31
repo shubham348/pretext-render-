@@ -1,10 +1,10 @@
 export function PretextIntroSection() {
   return (
-    <section className="rounded-[28px] border border-[#d6c39a] bg-white/72 p-5 shadow-[0_24px_80px_rgba(108,73,37,0.08)]">
+    <section className="min-w-0 rounded-[24px] border border-[#d6c39a] bg-white/72 p-4 shadow-[0_24px_80px_rgba(108,73,37,0.08)] sm:rounded-[28px] sm:p-5">
       <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-amber-700">
         Pretext Guide
       </p>
-      <h1 className="mt-3 text-3xl font-semibold tracking-tight text-slate-900">
+      <h1 className="mt-3 text-2xl font-semibold tracking-tight text-slate-900 sm:text-3xl">
         What Pretext Is And When To Use It
       </h1>
 
@@ -23,7 +23,7 @@ export function PretextIntroSection() {
         />
       </div>
 
-      <div className="mt-6 rounded-[20px] border border-emerald-100 bg-emerald-50/70 px-5 py-4 text-sm leading-7 text-slate-700">
+      <div className="mt-6 rounded-[18px] border border-emerald-100 bg-emerald-50/70 px-4 py-4 text-sm leading-7 text-slate-700 sm:rounded-[20px] sm:px-5">
         <p className="font-semibold text-slate-900">Common use cases</p>
         <p className="mt-2">
           Editorial text wrap, canvas readers, draggable obstacles, animated
@@ -33,8 +33,8 @@ export function PretextIntroSection() {
         </p>
       </div>
 
-      <div className="mt-6 overflow-auto rounded-[20px] bg-[#13211f] px-5 py-5 text-[14px] leading-7 text-emerald-100">
-        <code className="block whitespace-pre-wrap break-words">{`import { prepareWithSegments, layoutNextLine } from "@chenglou/pretext"
+      <div className="mt-6 overflow-hidden rounded-[18px] bg-[#13211f] px-4 py-4 text-[12px] leading-6 text-emerald-100 sm:rounded-[20px] sm:px-5 sm:py-5 sm:text-[14px] sm:leading-7">
+        <code className="block whitespace-pre-wrap break-all">{`import { prepareWithSegments, layoutNextLine } from "@chenglou/pretext"
 
 const prepared = prepareWithSegments(text, font, {
   whiteSpace: "pre-wrap",
@@ -52,7 +52,7 @@ while (true) {
 }`}</code>
       </div>
 
-      <div className="mt-6 rounded-[20px] border border-stone-200 bg-stone-50 px-5 py-5">
+      <div className="mt-6 rounded-[18px] border border-stone-200 bg-stone-50 px-4 py-4 sm:rounded-[20px] sm:px-5 sm:py-5">
         <p className="text-sm font-semibold uppercase tracking-[0.16em] text-slate-500">
           Full API Reference
         </p>
@@ -120,25 +120,25 @@ line-break: auto`}</code>
 
 function InfoCard({ title, text }) {
   return (
-    <div className="rounded-[18px] border border-stone-200 bg-stone-50 px-4 py-4">
+    <div className="min-w-0 rounded-[18px] border border-stone-200 bg-stone-50 px-4 py-4">
       <p className="text-sm font-semibold uppercase tracking-[0.14em] text-slate-900">
         {title}
       </p>
-      <p className="mt-2 text-sm leading-7 text-slate-600">{text}</p>
+      <p className="mt-2 text-sm leading-7 break-words text-slate-600">{text}</p>
     </div>
   )
 }
 
 function ApiCard({ title, lines }) {
   return (
-    <div className="rounded-[18px] border border-stone-200 bg-white px-4 py-4">
+    <div className="min-w-0 rounded-[18px] border border-stone-200 bg-white px-4 py-4">
       <p className="text-sm font-semibold uppercase tracking-[0.14em] text-slate-900">
         {title}
       </p>
-      <div className="mt-3 rounded-[16px] bg-slate-50 px-4 py-4 text-[13px] leading-7 text-slate-700">
+      <div className="mt-3 overflow-hidden rounded-[16px] bg-slate-50 px-4 py-4 text-[12px] leading-6 text-slate-700 sm:text-[13px] sm:leading-7">
         {lines.map((line) => (
           <div key={line}>
-            <code className="break-words">{line}</code>
+            <code className="break-all">{line}</code>
           </div>
         ))}
       </div>

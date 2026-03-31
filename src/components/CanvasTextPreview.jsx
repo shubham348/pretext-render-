@@ -17,9 +17,10 @@ function getMediaKind(url) {
 }
 
 export function CanvasTextPreview({ layoutData, mediaUrl, hasContent }) {
-  const previewHeight = Math.max(layoutData.estimatedHeight, 520)
-  const canvasWidth = layoutData.width + CANVAS_HORIZONTAL_PADDING * 2
+  const stageRef = useRef(null)
   const mediaElementRef = useRef(null)
+  const mobilePlacementKeyRef = useRef('')
+  const [stageWidth, setStageWidth] = useState(layoutData.width + CANVAS_HORIZONTAL_PADDING * 2)
   const [mediaSize, setMediaSize] = useState({ width: 170, height: 170 })
   const [mediaRender, setMediaRender] = useState({
     width: 170,
@@ -28,19 +29,34 @@ export function CanvasTextPreview({ layoutData, mediaUrl, hasContent }) {
     offsetY: 0,
   })
   const [rowIntervals, setRowIntervals] = useState([])
+  const mobileInnerPadding = stageWidth < 640 ? 24 : 0
+  const isMobileLayout = stageWidth < 640
+  const rightSafeInset = isMobileLayout ? 28 : 20
+  const contentWidth = useMemo(() => {
+    const availableWidth =
+      stageWidth -
+      CANVAS_HORIZONTAL_PADDING * 2 -
+      mobileInnerPadding -
+      rightSafeInset
+    return Math.min(layoutData.width, Math.max(140, Math.floor(availableWidth)))
+  }, [layoutData.width, mobileInnerPadding, rightSafeInset, stageWidth])
+  const previewHeight = Math.max(layoutData.estimatedHeight, 520)
+  const canvasWidth = contentWidth + CANVAS_HORIZONTAL_PADDING * 2
+  const mediaMaxSize = isMobileLayout ? 148 : 220
   const bounds = useMemo(
     () => ({
-      width: layoutData.width,
+      width: contentWidth,
       height: previewHeight,
     }),
-    [layoutData.width, previewHeight],
+    [contentWidth, previewHeight],
   )
   const {
     position,
+    setPosition,
     containerRef,
     dragHandleProps,
   } = useDraggableObject({
-    initialPosition: { x: layoutData.width * 0.34, y: previewHeight * 0.28 },
+    initialPosition: { x: contentWidth * 0.34, y: previewHeight * 0.28 },
     size: mediaSize,
     bounds,
   })
@@ -63,7 +79,7 @@ export function CanvasTextPreview({ layoutData, mediaUrl, hasContent }) {
     () =>
       computeFlowLayout({
         getNextLine: layoutData.getNextLine,
-        width: layoutData.width,
+        width: contentWidth,
         lineHeight: layoutData.lineHeight,
         obstacle,
         dropCap: layoutData.dropCap,
@@ -72,7 +88,7 @@ export function CanvasTextPreview({ layoutData, mediaUrl, hasContent }) {
       layoutData.dropCap,
       layoutData.getNextLine,
       layoutData.lineHeight,
-      layoutData.width,
+      contentWidth,
       obstacle,
     ],
   )
@@ -81,10 +97,49 @@ export function CanvasTextPreview({ layoutData, mediaUrl, hasContent }) {
     280,
   )
   const canvasRef = useCanvasRenderer({
-    layoutData,
+    layoutData: {
+      ...layoutData,
+      width: contentWidth,
+    },
     flowLayout,
     circle: obstacle,
   })
+
+  useEffect(() => {
+    const node = stageRef.current
+    if (!node) return undefined
+
+    const updateWidth = () => {
+      setStageWidth((current) =>
+        Math.abs(current - node.clientWidth) < 1 ? current : node.clientWidth,
+      )
+    }
+
+    updateWidth()
+
+    const observer = new ResizeObserver(updateWidth)
+    observer.observe(node)
+
+    return () => observer.disconnect()
+  }, [])
+
+  useEffect(() => {
+    if (!hasMedia || !isMobileLayout) return
+    const placementKey = `${mediaUrl}|${contentWidth}|${mediaSize.width}|${mediaSize.height}`
+
+    if (mobilePlacementKeyRef.current === placementKey) return
+
+    mobilePlacementKeyRef.current = placementKey
+    setPosition({
+      x: Math.max(0, (contentWidth - mediaSize.width) / 2),
+      y: 18,
+    })
+  }, [contentWidth, hasMedia, isMobileLayout, mediaSize.height, mediaSize.width, mediaUrl, setPosition])
+
+  useEffect(() => {
+    if (isMobileLayout) return
+    mobilePlacementKeyRef.current = ''
+  }, [isMobileLayout])
 
   if (!hasContent) {
     return (
@@ -104,8 +159,15 @@ export function CanvasTextPreview({ layoutData, mediaUrl, hasContent }) {
   }
 
   return (
-    <section className="rounded-[28px] border border-[#c9b58d] bg-[#e8d7b3]/70 p-4 shadow-[0_24px_80px_rgba(96,62,28,0.16)]">
-      <div className="book-scroll max-h-[78vh] overflow-auto rounded-[22px] bg-[#dec79f]/45 p-4">
+    <section className="min-w-0 rounded-[24px] border border-[#c9b58d] bg-[#e8d7b3]/70 p-3 shadow-[0_24px_80px_rgba(96,62,28,0.16)] sm:rounded-[28px] sm:p-4">
+      <div
+        ref={stageRef}
+        className="book-scroll max-h-[78vh] overflow-y-auto overflow-x-hidden rounded-[20px] bg-[#dec79f]/45 p-2 sm:rounded-[22px] sm:p-4"
+      >
+        <div
+          className="mx-auto w-full"
+          style={{ height: `${canvasHeight}px` }}
+        >
         <div
           ref={containerRef}
           className="relative mx-auto"
@@ -123,7 +185,7 @@ export function CanvasTextPreview({ layoutData, mediaUrl, hasContent }) {
             style={{
               left: `${CANVAS_HORIZONTAL_PADDING}px`,
               top: `${CANVAS_TOP_PADDING}px`,
-              width: `${layoutData.width}px`,
+              width: `${contentWidth}px`,
               height: `${previewHeight}px`,
             }}
           >
@@ -144,6 +206,7 @@ export function CanvasTextPreview({ layoutData, mediaUrl, hasContent }) {
                   mediaElementRef={mediaElementRef}
                   mediaKind={mediaKind}
                   mediaUrl={mediaUrl}
+                  maxSize={mediaMaxSize}
                   mediaRender={mediaRender}
                   onSizeChange={setMediaSize}
                   onRenderChange={setMediaRender}
@@ -153,14 +216,15 @@ export function CanvasTextPreview({ layoutData, mediaUrl, hasContent }) {
             ) : null}
           </div>
         </div>
+        </div>
       </div>
     </section>
   )
 }
 
-function fitMediaSize(width, height) {
-  const maxWidth = 220
-  const maxHeight = 220
+function fitMediaSize(width, height, maxSize = 220) {
+  const maxWidth = maxSize
+  const maxHeight = maxSize
 
   if (!width || !height) {
     return { width: 170, height: 170 }
@@ -291,9 +355,9 @@ function extractLargestComponent(mask, width, height) {
   return bestPixels
 }
 
-function measureImageMask(image) {
+function measureImageMask(image, maxSize) {
   const cropPadding = 4
-  const fullSize = fitMediaSize(image.naturalWidth, image.naturalHeight)
+  const fullSize = fitMediaSize(image.naturalWidth, image.naturalHeight, maxSize)
   const canvas = document.createElement('canvas')
   canvas.width = fullSize.width
   canvas.height = fullSize.height
@@ -397,6 +461,7 @@ function MediaSurface({
   mediaElementRef,
   mediaKind,
   mediaUrl,
+  maxSize,
   mediaRender,
   onSizeChange,
   onRenderChange,
@@ -425,7 +490,7 @@ function MediaSurface({
       const image = mediaElementRef.current
 
       if (image?.complete && image.naturalWidth && image.naturalHeight) {
-        const measurement = measureImageMask(image)
+        const measurement = measureImageMask(image, maxSize)
         const key = [
           measurement.size.width,
           measurement.size.height,
@@ -457,6 +522,7 @@ function MediaSurface({
     mediaElementRef,
     mediaKind,
     mediaUrl,
+    maxSize,
     onRenderChange,
     onRowIntervalsChange,
     onSizeChange,
@@ -495,6 +561,7 @@ function MediaSurface({
           const nextSize = fitMediaSize(
             event.currentTarget.videoWidth,
             event.currentTarget.videoHeight,
+            maxSize,
           )
           onSizeChange(nextSize)
           onRenderChange({

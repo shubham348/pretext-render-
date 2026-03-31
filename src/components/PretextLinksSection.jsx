@@ -5,24 +5,6 @@ const VIRAL_SHOWCASE_DEMOS = [
     'https://pretext-playground.builderz.dev',
   ],
   [
-    'Fluid smoke rendered as typographic ASCII',
-    'A kinetic smoke field where every frame is rebuilt through text.',
-    'https://somnai-dreams.github.io/fluid-smoke',
-  ],
-  [
-    'Wireframe torus through a character grid',
-    'A 3D-feeling text experiment that pushes Pretext beyond standard UI layout.',
-    'https://somnai-dreams.github.io/wireframe-torus',
-  ],
-  [
-    'Multi-column editorial with animated orbs at 60fps',
-    'A strong reference for magazine-style flow around moving obstacles.',
-    'https://somnai-dreams.github.io/editorial-engine',
-  ],
-]
-
-const INTERACTIVE_DEMOS = [
-  [
     'SnakeCase Text',
     'Fun typography play that shows how expressive custom text motion can get.',
     'https://snakecase-text.vercel.app',
@@ -32,6 +14,10 @@ const INTERACTIVE_DEMOS = [
     'Game-style text that breaks and collides like a brick breaker.',
     'https://pretext-breaker.netlify.app',
   ],
+]
+
+const INTERACTIVE_DEMOS = [
+
   [
     'Splat Editor',
     'Text layout reacts to splat objects in a playful editor workflow.',
@@ -77,11 +63,11 @@ const CORE_LINKS = [
 
 export function PretextLinksSection() {
   return (
-    <section className="rounded-[28px] border border-[#d6c39a] bg-white/72 p-5 shadow-[0_24px_80px_rgba(108,73,37,0.08)]">
+    <section className="min-w-0 rounded-[24px] border border-[#d6c39a] bg-white/72 p-4 shadow-[0_24px_80px_rgba(108,73,37,0.08)] sm:rounded-[28px] sm:p-5">
       <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-amber-700">
         References
       </p>
-      <h2 className="mt-3 text-3xl font-semibold tracking-tight text-slate-900">
+      <h2 className="mt-3 text-2xl font-semibold tracking-tight text-slate-900 sm:text-3xl">
         Demos, Inspiration, And Core Links
       </h2>
       <p className="mt-3 max-w-3xl text-sm leading-7 text-slate-600">
@@ -129,7 +115,7 @@ function LinksGroup({ className = '', eyebrow, items }) {
             <span className="block text-base font-semibold text-slate-900">
               {label}
             </span>
-            <span className="mt-2 block leading-6 text-slate-600">{text}</span>
+            <span className="mt-2 block break-words leading-6 text-slate-600">{text}</span>
             <span className="mt-3 block break-words text-xs leading-5 text-slate-500">
               {href.replace(/^https?:\/\//, '')}
             </span>

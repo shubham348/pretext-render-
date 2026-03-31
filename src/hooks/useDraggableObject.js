@@ -11,7 +11,7 @@ function clampPosition(position, size, bounds) {
   }
 }
 
-export function useDraggableObject({ initialPosition, size, bounds }) {
+export function useDraggableObject({ initialPosition, size, bounds, scale = 1 }) {
   const boundsWidth = bounds.width
   const boundsHeight = bounds.height
   const objectWidth = size.width
@@ -73,9 +73,10 @@ export function useDraggableObject({ initialPosition, size, bounds }) {
     if (!container) return
 
     const rect = container.getBoundingClientRect()
+    const safeScale = scale || 1
     schedulePosition({
-      x: event.clientX - rect.left - dragOffsetRef.current.x,
-      y: event.clientY - rect.top - dragOffsetRef.current.y,
+      x: (event.clientX - rect.left) / safeScale - dragOffsetRef.current.x,
+      y: (event.clientY - rect.top) / safeScale - dragOffsetRef.current.y,
     })
   }
 
@@ -86,9 +87,10 @@ export function useDraggableObject({ initialPosition, size, bounds }) {
     if (!container) return
 
     const rect = container.getBoundingClientRect()
+    const safeScale = scale || 1
     dragOffsetRef.current = {
-      x: event.clientX - rect.left - position.x,
-      y: event.clientY - rect.top - position.y,
+      x: (event.clientX - rect.left) / safeScale - position.x,
+      y: (event.clientY - rect.top) / safeScale - position.y,
     }
     isDraggingRef.current = true
     event.currentTarget.setPointerCapture(event.pointerId)
@@ -109,6 +111,7 @@ export function useDraggableObject({ initialPosition, size, bounds }) {
 
   return {
     position,
+    setPosition: schedulePosition,
     containerRef,
     dragHandleProps: {
       onPointerDown: handlePointerDown,

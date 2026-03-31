@@ -5,15 +5,19 @@ import {
   prepareWithSegments,
 } from '@chenglou/pretext'
 import { PRETEXT_FONT } from '../lib/pretext'
+import { useFontsReady } from './useFontsReady'
 
 export function usePretextLayout(text) {
+  const fontReadyTick = useFontsReady([PRETEXT_FONT])
+
   const prepared = useMemo(() => {
+    void fontReadyTick
     const source = text?.trim() ? text : ''
 
     return prepareWithSegments(source, PRETEXT_FONT, {
       whiteSpace: 'pre-wrap',
     })
-  }, [text])
+  }, [fontReadyTick, text])
 
   const getLines = useMemo(
     () => (width, lineHeight) => layoutWithLines(prepared, width, lineHeight),
@@ -29,5 +33,6 @@ export function usePretextLayout(text) {
     prepared,
     getLines,
     getNextLine,
+    fontReadyTick,
   }
 }

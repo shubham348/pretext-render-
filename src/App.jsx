@@ -2,7 +2,6 @@ import { useMemo, useState } from 'react'
 import { CanvasTextPreview } from './components/CanvasTextPreview'
 import { PretextEditorialExample } from './components/PretextEditorialExample'
 import { PretextBasicsDemo } from './components/PretextBasicsDemo'
-import { PretextFlowBallDemo } from './components/PretextFlowBallDemo'
 import { PretextIntroSection } from './components/PretextIntroSection'
 import { PretextLinksSection } from './components/PretextLinksSection'
 import { PdfUploader } from './components/PdfUploader'
@@ -42,11 +41,11 @@ function App() {
   )
 
   return (
-    <main className="min-h-screen bg-[radial-gradient(circle_at_top,_rgba(251,191,36,0.24),_transparent_32%),linear-gradient(180deg,_#f8f4ec_0%,_#efe6d5_100%)] text-stone-900">
-      <div className="mx-auto flex min-h-screen w-full max-w-6xl flex-col px-4 py-8 sm:px-6">
-        <section className="rounded-[36px] border border-stone-300/70 bg-white/60 p-5 shadow-[0_24px_90px_rgba(120,53,15,0.12)] backdrop-blur sm:p-6">
+    <main className="min-h-screen overflow-x-hidden bg-[radial-gradient(circle_at_top,_rgba(251,191,36,0.24),_transparent_32%),linear-gradient(180deg,_#f8f4ec_0%,_#efe6d5_100%)] text-stone-900">
+      <div className="mx-auto flex min-h-screen w-full max-w-6xl flex-col px-3 py-4 sm:px-6 sm:py-8">
+        <section className="rounded-[28px] border border-stone-300/70 bg-white/60 p-3 shadow-[0_24px_90px_rgba(120,53,15,0.12)] backdrop-blur sm:rounded-[36px] sm:p-6">
           <div className="grid gap-5">
-            <PretextIntroSection />
+            
             <PdfUploader
               metadata={metadata}
               error={error}
@@ -60,9 +59,9 @@ function App() {
               mediaUrl={mediaUrl}
               hasContent={Boolean(bodyText || dropCap)}
             />
+            <PretextIntroSection />
             <PretextEditorialExample />
             <PretextBasicsDemo />
-            <PretextFlowBallDemo />
             <PretextLinksSection />
           </div>
         </section>
