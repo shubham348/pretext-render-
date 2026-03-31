@@ -1,10 +1,6 @@
 export function PdfUploader({
-  metadata,
-  error,
-  isExtracting,
   mediaUrl,
   onMediaUrlChange,
-  sourceUrl,
 }) {
   return (
     <section className="rounded-[24px] border border-stone-300/80 bg-white/85 p-4 shadow-[0_16px_40px_rgba(120,53,15,0.06)] backdrop-blur">

@@ -3,6 +3,8 @@ import { CanvasTextPreview } from './components/CanvasTextPreview'
 import { PretextEditorialExample } from './components/PretextEditorialExample'
 import { PretextBasicsDemo } from './components/PretextBasicsDemo'
 import { PretextFlowBallDemo } from './components/PretextFlowBallDemo'
+import { PretextIntroSection } from './components/PretextIntroSection'
+import { PretextLinksSection } from './components/PretextLinksSection'
 import { PdfUploader } from './components/PdfUploader'
 import { usePdfUpload } from './hooks/usePdfUpload'
 import { extractDropCapContent, getDropCapInset } from './lib/bookLayout'
@@ -44,6 +46,7 @@ function App() {
       <div className="mx-auto flex min-h-screen w-full max-w-6xl flex-col px-4 py-8 sm:px-6">
         <section className="rounded-[36px] border border-stone-300/70 bg-white/60 p-5 shadow-[0_24px_90px_rgba(120,53,15,0.12)] backdrop-blur sm:p-6">
           <div className="grid gap-5">
+            <PretextIntroSection />
             <PdfUploader
               metadata={metadata}
               error={error}
@@ -60,6 +63,7 @@ function App() {
             <PretextEditorialExample />
             <PretextBasicsDemo />
             <PretextFlowBallDemo />
+            <PretextLinksSection />
           </div>
         </section>
       </div>
