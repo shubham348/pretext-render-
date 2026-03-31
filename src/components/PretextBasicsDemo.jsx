@@ -38,7 +38,6 @@ export function PretextBasicsDemo() {
       badge="Demo 1"
       title="Height Without DOM"
       summary="Measure text height using pure arithmetic, no DOM layout and no reflow. prepareWithSegments() caches once, and layoutWithLines() is the cheap hot path."
-      defaultOpen
     >
       <div className="grid gap-8 lg:grid-cols-[minmax(0,1.1fr)_minmax(320px,0.9fr)]">
         <div>

@@ -1,5 +1,6 @@
 import { useMemo, useState } from 'react'
 import { CanvasTextPreview } from './components/CanvasTextPreview'
+import { PretextEditorialExample } from './components/PretextEditorialExample'
 import { PretextBasicsDemo } from './components/PretextBasicsDemo'
 import { PretextFlowBallDemo } from './components/PretextFlowBallDemo'
 import { PdfUploader } from './components/PdfUploader'
@@ -14,7 +15,7 @@ import {
 
 function App() {
   const [mediaUrl, setMediaUrl] = useState('https://media.tenor.com/KeqbuC5yrgUAAAAi/deal-with-it-trailblazer.gif')
-  const { metadata, fullText, error, isExtracting, onFileChange } = usePdfUpload()
+  const { metadata, fullText, error, isExtracting, sourceUrl } = usePdfUpload()
   const { dropCap, bodyText } = useMemo(
     () => extractDropCapContent(fullText ?? ''),
     [fullText],
@@ -48,14 +49,15 @@ function App() {
               error={error}
               isExtracting={isExtracting}
               mediaUrl={mediaUrl}
-              onFileChange={onFileChange}
               onMediaUrlChange={setMediaUrl}
+              sourceUrl={sourceUrl}
             />
             <CanvasTextPreview
               layoutData={layoutData}
               mediaUrl={mediaUrl}
               hasContent={Boolean(bodyText || dropCap)}
             />
+            <PretextEditorialExample />
             <PretextBasicsDemo />
             <PretextFlowBallDemo />
           </div>

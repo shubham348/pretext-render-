@@ -107,6 +107,26 @@ export function formatPDFText(items, options = {}) {
 
 export async function extractPdfTextByPage(file) {
   const buffer = await file.arrayBuffer()
+  return extractPdfTextFromBuffer(buffer)
+}
+
+export async function extractPdfTextByUrl(url) {
+  const response = await fetch(url)
+
+  if (!response.ok) {
+    throw new Error(`Failed to load PDF: ${response.status}`)
+  }
+
+  const buffer = await response.arrayBuffer()
+  const pages = await extractPdfTextFromBuffer(buffer)
+
+  return {
+    pages,
+    size: Number(response.headers.get('content-length') || 0),
+  }
+}
+
+async function extractPdfTextFromBuffer(buffer) {
   const loadingTask = getDocument({ data: buffer })
   const document = await loadingTask.promise
 
