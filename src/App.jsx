@@ -43,9 +43,20 @@ function App() {
   return (
     <main className="min-h-screen overflow-x-hidden bg-[radial-gradient(circle_at_top,_rgba(251,191,36,0.24),_transparent_32%),linear-gradient(180deg,_#f8f4ec_0%,_#efe6d5_100%)] text-stone-900">
       <div className="mx-auto flex min-h-screen w-full max-w-6xl flex-col px-3 py-4 sm:px-6 sm:py-8">
+        <header className="mb-4 rounded-[24px] border border-stone-300/70 bg-white/70 px-4 py-4 shadow-[0_20px_60px_rgba(120,53,15,0.08)] backdrop-blur sm:mb-6 sm:rounded-[30px] sm:px-6 sm:py-5">
+          <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-amber-700">
+            Pretext
+          </p>
+          <h1 className="mt-2 text-2xl font-semibold tracking-tight text-stone-900 sm:text-4xl">
+            Pretext Library Demo
+          </h1>
+          <p className="mt-2 max-w-3xl text-sm leading-6 text-stone-600 sm:text-base sm:leading-7">
+            Interactive examples and a PDF reader showing how Pretext layout
+            text without relying on traditional DOM flow.
+          </p>
+        </header>
         <section className="rounded-[28px] border border-stone-300/70 bg-white/60 p-3 shadow-[0_24px_90px_rgba(120,53,15,0.12)] backdrop-blur sm:rounded-[36px] sm:p-6">
           <div className="grid gap-5">
-            
             <PdfUploader
               metadata={metadata}
               error={error}
