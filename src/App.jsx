@@ -101,14 +101,14 @@ function App() {
         </header>
         <section className="rounded-[28px] border border-stone-300/70 bg-white/60 p-3 shadow-[0_24px_90px_rgba(120,53,15,0.12)] backdrop-blur sm:rounded-[36px] sm:p-6">
           <div className="grid gap-5">
-            <PdfUploader
+            {/* <PdfUploader
               metadata={metadata}
               error={error}
               isExtracting={isExtracting}
               mediaUrl={mediaUrl}
               onMediaUrlChange={setMediaUrl}
               sourceUrl={sourceUrl}
-            />
+            /> */}
             <CanvasTextPreview
               layoutData={layoutData}
               mediaUrl={mediaUrl}
