@@ -154,11 +154,6 @@ export function CanvasTextPreview({ layoutData, mediaUrl, hasContent }) {
           </div>
         </div>
       </div>
-      <div className="mt-4 grid gap-3 sm:grid-cols-3">
-        <Metric label="File width" value={`${layoutData.width}px`} />
-        <Metric label="Rendered lines" value={flowLayout.lineCount} />
-        <Metric label="Media box" value={hasMedia ? `${mediaSize.width}x${mediaSize.height}` : 'None'} />
-      </div>
     </section>
   )
 }
@@ -517,15 +512,6 @@ function MediaSurface({
   return (
     <div className="flex h-full w-full items-center justify-center border border-dashed border-white/20 bg-transparent px-4 text-center text-xs leading-5 text-white/80">
       Paste an image, GIF, or video URL
-    </div>
-  )
-}
-
-function Metric({ label, value }) {
-  return (
-    <div className="rounded-2xl border border-[#c9b58d] bg-[#f6ead0]/70 px-4 py-3">
-      <p className="text-xs uppercase tracking-[0.2em] text-[#846136]">{label}</p>
-      <p className="mt-2 text-lg font-semibold text-[#3d2918]">{value}</p>
     </div>
   )
 }
