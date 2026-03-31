@@ -25,3 +25,14 @@ export function getDropCapInset() {
     lines: DROP_CAP_LINES,
   }
 }
+
+export function getResponsiveDropCapInset(isCompact) {
+  if (isCompact) {
+    return {
+      width: 52,
+      lines: 4,
+    }
+  }
+
+  return getDropCapInset()
+}

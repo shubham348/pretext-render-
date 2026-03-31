@@ -7,17 +7,17 @@ import {
 import { PRETEXT_FONT } from '../lib/pretext'
 import { useFontsReady } from './useFontsReady'
 
-export function usePretextLayout(text) {
-  const fontReadyTick = useFontsReady([PRETEXT_FONT])
+export function usePretextLayout(text, font = PRETEXT_FONT) {
+  const fontReadyTick = useFontsReady([font])
 
   const prepared = useMemo(() => {
     void fontReadyTick
     const source = text?.trim() ? text : ''
 
-    return prepareWithSegments(source, PRETEXT_FONT, {
+    return prepareWithSegments(source, font, {
       whiteSpace: 'pre-wrap',
     })
-  }, [fontReadyTick, text])
+  }, [font, fontReadyTick, text])
 
   const getLines = useMemo(
     () => (width, lineHeight) => layoutWithLines(prepared, width, lineHeight),

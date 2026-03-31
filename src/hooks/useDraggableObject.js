@@ -11,113 +11,125 @@ function clampPosition(position, size, bounds) {
   }
 }
 
-export function useDraggableObject({ initialPosition, size, bounds, scale = 1 }) {
-  const boundsWidth = bounds.width
-  const boundsHeight = bounds.height
-  const objectWidth = size.width
-  const objectHeight = size.height
+export function useDraggableObject({
+  initialPosition,
+  size,
+  bounds,
+  scale = 1,
+  onDragStart,
+}) {
   const [position, setPosition] = useState(() =>
     clampPosition(initialPosition, size, bounds),
   )
   const containerRef = useRef(null)
-  const isDraggingRef = useRef(false)
-  const animationFrameRef = useRef(null)
-  const dragOffsetRef = useRef({ x: 0, y: 0 })
+  const dragStateRef = useRef(null)
   const targetPositionRef = useRef(position)
+  const frameRef = useRef(null)
 
   useEffect(() => {
-    const nextPosition = clampPosition(targetPositionRef.current, {
-      width: objectWidth,
-      height: objectHeight,
-    }, {
-      width: boundsWidth,
-      height: boundsHeight,
-    })
+    const nextPosition = clampPosition(targetPositionRef.current, size, bounds)
     targetPositionRef.current = nextPosition
     setPosition(nextPosition)
-  }, [boundsHeight, boundsWidth, objectHeight, objectWidth])
+  }, [bounds, size])
 
   useEffect(
     () => () => {
-      if (animationFrameRef.current !== null) {
-        cancelAnimationFrame(animationFrameRef.current)
+      if (frameRef.current !== null) {
+        cancelAnimationFrame(frameRef.current)
       }
     },
     [],
   )
 
-  const ensureAnimation = () => {
-    if (animationFrameRef.current !== null) return
+  const flushPosition = () => {
+    if (frameRef.current !== null) return
 
-    const tick = () => {
+    frameRef.current = requestAnimationFrame(() => {
+      frameRef.current = null
       setPosition(targetPositionRef.current)
-      animationFrameRef.current = null
-    }
-
-    animationFrameRef.current = requestAnimationFrame(tick)
+    })
   }
 
-  const schedulePosition = (nextPosition) => {
-    targetPositionRef.current = clampPosition(nextPosition, {
-      width: objectWidth,
-      height: objectHeight,
-    }, {
-      width: boundsWidth,
-      height: boundsHeight,
-    })
-    ensureAnimation()
+  const moveTo = (nextPosition) => {
+    targetPositionRef.current = clampPosition(nextPosition, size, bounds)
+    flushPosition()
   }
 
   const updateFromPointer = (event) => {
     const container = containerRef.current
-    if (!container) return
+    const dragState = dragStateRef.current
+    if (!container || !dragState) return
 
     const rect = container.getBoundingClientRect()
     const safeScale = scale || 1
-    schedulePosition({
-      x: (event.clientX - rect.left) / safeScale - dragOffsetRef.current.x,
-      y: (event.clientY - rect.top) / safeScale - dragOffsetRef.current.y,
+
+    moveTo({
+      x: (event.clientX - rect.left) / safeScale - dragState.offsetX,
+      y: (event.clientY - rect.top) / safeScale - dragState.offsetY,
     })
   }
 
+  const endDrag = () => {
+    dragStateRef.current = null
+  }
+
   const handlePointerDown = (event) => {
-    if (event.button !== 0) return
+    if (event.pointerType === 'mouse' && event.button !== 0) return
 
     const container = containerRef.current
     if (!container) return
 
     const rect = container.getBoundingClientRect()
     const safeScale = scale || 1
-    dragOffsetRef.current = {
-      x: (event.clientX - rect.left) / safeScale - position.x,
-      y: (event.clientY - rect.top) / safeScale - position.y,
+
+    dragStateRef.current = {
+      pointerId: event.pointerId,
+      offsetX: (event.clientX - rect.left) / safeScale - position.x,
+      offsetY: (event.clientY - rect.top) / safeScale - position.y,
     }
-    isDraggingRef.current = true
-    event.currentTarget.setPointerCapture(event.pointerId)
+    event.currentTarget.setPointerCapture?.(event.pointerId)
+    onDragStart?.()
+    event.stopPropagation()
+    event.preventDefault()
   }
 
   const handlePointerMove = (event) => {
-    if (!isDraggingRef.current) return
+    if (!dragStateRef.current) return
+    if (dragStateRef.current.pointerId !== event.pointerId) return
+
     updateFromPointer(event)
+    event.preventDefault()
   }
 
   const handlePointerUp = (event) => {
-    isDraggingRef.current = false
+    if (!dragStateRef.current) return
+    if (dragStateRef.current.pointerId !== event.pointerId) return
 
-    if (event.currentTarget.hasPointerCapture(event.pointerId)) {
+    if (event.currentTarget.hasPointerCapture?.(event.pointerId)) {
       event.currentTarget.releasePointerCapture(event.pointerId)
     }
+    endDrag()
+  }
+
+  const handlePointerCancel = (event) => {
+    if (!dragStateRef.current) return
+    if (dragStateRef.current.pointerId !== event.pointerId) return
+
+    if (event.currentTarget.hasPointerCapture?.(event.pointerId)) {
+      event.currentTarget.releasePointerCapture(event.pointerId)
+    }
+    endDrag()
   }
 
   return {
     position,
-    setPosition: schedulePosition,
+    setPosition: moveTo,
     containerRef,
     dragHandleProps: {
       onPointerDown: handlePointerDown,
       onPointerMove: handlePointerMove,
       onPointerUp: handlePointerUp,
-      onPointerCancel: handlePointerUp,
+      onPointerCancel: handlePointerCancel,
     },
   }
 }

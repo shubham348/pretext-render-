@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { CanvasTextPreview } from './components/CanvasTextPreview'
 import { PretextEditorialExample } from './components/PretextEditorialExample'
 import { PretextBasicsDemo } from './components/PretextBasicsDemo'
@@ -6,38 +6,82 @@ import { PretextIntroSection } from './components/PretextIntroSection'
 import { PretextLinksSection } from './components/PretextLinksSection'
 import { PdfUploader } from './components/PdfUploader'
 import { usePdfUpload } from './hooks/usePdfUpload'
-import { extractDropCapContent, getDropCapInset } from './lib/bookLayout'
+import { extractDropCapContent, getResponsiveDropCapInset } from './lib/bookLayout'
 import { usePretextLayout } from './hooks/usePretextLayout'
 import {
-  PRETEXT_FONT,
   PRETEXT_LINE_HEIGHT,
   PRETEXT_MAX_WIDTH,
 } from './lib/pretext'
 
+function getResponsiveBookTypography(windowWidth) {
+  if (windowWidth < 540) {
+    return {
+      font: '400 15px "MedievalSharp", "Palatino Linotype", "Book Antiqua", Palatino, Georgia, serif',
+      lineHeight: 20,
+      width: Math.min(PRETEXT_MAX_WIDTH, 284),
+      compact: true,
+      dropCapSize: 58,
+    }
+  }
+
+  if (windowWidth < 900) {
+    return {
+      font: '400 16px "MedievalSharp", "Palatino Linotype", "Book Antiqua", Palatino, Georgia, serif',
+      lineHeight: 22,
+      width: Math.min(PRETEXT_MAX_WIDTH, 420),
+      compact: true,
+      dropCapSize: 64,
+    }
+  }
+
+  return {
+    font: '400 19px "MedievalSharp", "Palatino Linotype", "Book Antiqua", Palatino, Georgia, serif',
+    lineHeight: PRETEXT_LINE_HEIGHT,
+    width: PRETEXT_MAX_WIDTH,
+    compact: false,
+    dropCapSize: 74,
+  }
+}
+
 function App() {
   const [mediaUrl, setMediaUrl] = useState('https://media.tenor.com/KeqbuC5yrgUAAAAi/deal-with-it-trailblazer.gif')
+  const [windowWidth, setWindowWidth] = useState(() =>
+    typeof window !== 'undefined' ? window.innerWidth : 1280,
+  )
   const { metadata, fullText, error, isExtracting, sourceUrl } = usePdfUpload()
   const { dropCap, bodyText } = useMemo(
     () => extractDropCapContent(fullText ?? ''),
     [fullText],
   )
-  const width = PRETEXT_MAX_WIDTH
-  const { prepared, getLines, getNextLine } = usePretextLayout(bodyText)
-  const previewParagraph = useMemo(() => getLines(width, PRETEXT_LINE_HEIGHT), [getLines, width])
+  const typography = useMemo(() => getResponsiveBookTypography(windowWidth), [windowWidth])
+  const { prepared, getLines, getNextLine } = usePretextLayout(bodyText, typography.font)
+  const previewParagraph = useMemo(
+    () => getLines(typography.width, typography.lineHeight),
+    [getLines, typography.lineHeight, typography.width],
+  )
+
+  useEffect(() => {
+    const handleResize = () => setWindowWidth(window.innerWidth)
+
+    window.addEventListener('resize', handleResize)
+    return () => window.removeEventListener('resize', handleResize)
+  }, [])
+
   const layoutData = useMemo(
     () => ({
       prepared,
-      width,
-      font: PRETEXT_FONT,
-      lineHeight: PRETEXT_LINE_HEIGHT,
+      width: typography.width,
+      font: typography.font,
+      lineHeight: typography.lineHeight,
       getNextLine,
       estimatedHeight: previewParagraph.height,
       dropCap: {
         letter: dropCap,
-        inset: getDropCapInset(),
+        inset: getResponsiveDropCapInset(typography.compact),
+        size: typography.dropCapSize,
       },
     }),
-    [dropCap, getNextLine, prepared, previewParagraph.height, width],
+    [dropCap, getNextLine, prepared, previewParagraph.height, typography],
   )
 
   return (

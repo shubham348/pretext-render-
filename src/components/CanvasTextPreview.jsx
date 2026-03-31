@@ -8,41 +8,69 @@ import {
 } from '../lib/canvasLayout'
 import { computeFlowLayout } from '../lib/flowLayout'
 
-function getMediaKind(url) {
-  const value = url.toLowerCase()
+function buildCircleRowIntervals(size) {
+  const radius = size.width / 2
+  const centerX = radius
+  const centerY = size.height / 2
 
-  if (/\.(mp4|webm|ogg|mov)(\?|#|$)/.test(value)) return 'video'
-  if (/\.(gif|png|jpg|jpeg|webp|avif|svg)(\?|#|$)/.test(value)) return 'image'
-  return 'unknown'
+  return Array.from({ length: size.height }, (_, row) => {
+    const y = row + 0.5
+    const dy = Math.abs(y - centerY)
+
+    if (dy > radius) return null
+
+    const dx = Math.sqrt(radius * radius - dy * dy)
+
+    return {
+      left: Math.max(0, Math.floor(centerX - dx)),
+      right: Math.min(size.width, Math.ceil(centerX + dx)),
+    }
+  })
 }
 
 export function CanvasTextPreview({ layoutData, mediaUrl, hasContent }) {
-  const stageRef = useRef(null)
-  const mediaElementRef = useRef(null)
-  const mobilePlacementKeyRef = useRef('')
-  const [stageWidth, setStageWidth] = useState(layoutData.width + CANVAS_HORIZONTAL_PADDING * 2)
-  const [mediaSize, setMediaSize] = useState({ width: 170, height: 170 })
-  const [mediaRender, setMediaRender] = useState({
-    width: 170,
-    height: 170,
-    offsetX: 0,
-    offsetY: 0,
-  })
-  const [rowIntervals, setRowIntervals] = useState([])
-  const mobileInnerPadding = stageWidth < 640 ? 24 : 0
-  const isMobileLayout = stageWidth < 640
-  const rightSafeInset = isMobileLayout ? 28 : 20
+  const viewportRef = useRef(null)
+  const autoPlacedKeyRef = useRef('')
+  const hasDraggedOnMobileRef = useRef(false)
+  const [stageWidth, setStageWidth] = useState(() =>
+    typeof window !== 'undefined' ? Math.max(280, window.innerWidth - 32) : 720,
+  )
+  const isPhoneLayout = stageWidth < 540
+  const isTabletLayout = stageWidth >= 540 && stageWidth < 900
+  const isCompactLayout = isPhoneLayout || isTabletLayout
+  const viewportPadding = isPhoneLayout ? 10 : isTabletLayout ? 14 : 18
+  const scrollbarReserve = 16
+  const ballSize = useMemo(
+    () => ({
+      width: isPhoneLayout ? 56 : isTabletLayout ? 60 : 68,
+      height: isPhoneLayout ? 56 : isTabletLayout ? 60 : 68,
+    }),
+    [isPhoneLayout, isTabletLayout],
+  )
   const contentWidth = useMemo(() => {
     const availableWidth =
       stageWidth -
+      viewportPadding * 2 -
       CANVAS_HORIZONTAL_PADDING * 2 -
-      mobileInnerPadding -
-      rightSafeInset
-    return Math.min(layoutData.width, Math.max(140, Math.floor(availableWidth)))
-  }, [layoutData.width, mobileInnerPadding, rightSafeInset, stageWidth])
-  const previewHeight = Math.max(layoutData.estimatedHeight, 520)
+      scrollbarReserve -
+      (isPhoneLayout ? 22 : isTabletLayout ? 18 : 10)
+    const maxWidth = isPhoneLayout ? 284 : isTabletLayout ? 420 : layoutData.width
+    const minWidth = isPhoneLayout ? 180 : isTabletLayout ? 260 : 320
+
+    return Math.max(minWidth, Math.min(maxWidth, Math.floor(availableWidth)))
+  }, [
+    isPhoneLayout,
+    isTabletLayout,
+    layoutData.width,
+    scrollbarReserve,
+    stageWidth,
+    viewportPadding,
+  ])
+  const previewHeight = Math.max(
+    layoutData.estimatedHeight,
+    isPhoneLayout ? 560 : isTabletLayout ? 620 : 680,
+  )
   const canvasWidth = contentWidth + CANVAS_HORIZONTAL_PADDING * 2
-  const mediaMaxSize = isMobileLayout ? 148 : 220
   const bounds = useMemo(
     () => ({
       width: contentWidth,
@@ -56,24 +84,29 @@ export function CanvasTextPreview({ layoutData, mediaUrl, hasContent }) {
     containerRef,
     dragHandleProps,
   } = useDraggableObject({
-    initialPosition: { x: contentWidth * 0.34, y: previewHeight * 0.28 },
-    size: mediaSize,
+    initialPosition: { x: contentWidth * 0.48, y: previewHeight * 0.3 },
+    size: ballSize,
     bounds,
+    onDragStart: () => {
+      if (isCompactLayout) {
+        hasDraggedOnMobileRef.current = true
+      }
+    },
   })
-  const mediaKind = getMediaKind(mediaUrl || '')
-  const hasMedia = Boolean(mediaUrl?.trim()) && mediaKind !== 'unknown'
+  const rowIntervals = useMemo(() => buildCircleRowIntervals(ballSize), [ballSize])
+  const hasBall = hasContent
   const obstacle = useMemo(
     () =>
-      hasMedia
+      hasBall
         ? {
             x: position.x,
             y: position.y,
-            width: mediaSize.width,
-            height: mediaSize.height,
+            width: ballSize.width,
+            height: ballSize.height,
             rowIntervals,
           }
         : null,
-    [hasMedia, mediaSize.height, mediaSize.width, position.x, position.y, rowIntervals],
+    [ballSize.height, ballSize.width, hasBall, position.x, position.y, rowIntervals],
   )
   const flowLayout = useMemo(
     () =>
@@ -106,7 +139,7 @@ export function CanvasTextPreview({ layoutData, mediaUrl, hasContent }) {
   })
 
   useEffect(() => {
-    const node = stageRef.current
+    const node = viewportRef.current
     if (!node) return undefined
 
     const updateWidth = () => {
@@ -124,22 +157,36 @@ export function CanvasTextPreview({ layoutData, mediaUrl, hasContent }) {
   }, [])
 
   useEffect(() => {
-    if (!hasMedia || !isMobileLayout) return
-    const placementKey = `${mediaUrl}|${contentWidth}|${mediaSize.width}|${mediaSize.height}`
-
-    if (mobilePlacementKeyRef.current === placementKey) return
-
-    mobilePlacementKeyRef.current = placementKey
-    setPosition({
-      x: Math.max(0, (contentWidth - mediaSize.width) / 2),
-      y: 18,
-    })
-  }, [contentWidth, hasMedia, isMobileLayout, mediaSize.height, mediaSize.width, mediaUrl, setPosition])
+    hasDraggedOnMobileRef.current = false
+    autoPlacedKeyRef.current = ''
+  }, [mediaUrl, hasContent])
 
   useEffect(() => {
-    if (isMobileLayout) return
-    mobilePlacementKeyRef.current = ''
-  }, [isMobileLayout])
+    if (!hasBall || !isCompactLayout) return
+    if (hasDraggedOnMobileRef.current) return
+    const placementKey = `ball|${contentWidth}|${ballSize.width}|${ballSize.height}`
+
+    if (autoPlacedKeyRef.current === placementKey) return
+
+    autoPlacedKeyRef.current = placementKey
+    setPosition({
+      x: Math.max(0, (contentWidth - ballSize.width) / 2),
+      y: 18,
+    })
+  }, [
+    ballSize.height,
+    ballSize.width,
+    contentWidth,
+    hasBall,
+    isCompactLayout,
+    setPosition,
+  ])
+
+  useEffect(() => {
+    if (isCompactLayout) return
+    hasDraggedOnMobileRef.current = false
+    autoPlacedKeyRef.current = ''
+  }, [isCompactLayout])
 
   if (!hasContent) {
     return (
@@ -161,7 +208,7 @@ export function CanvasTextPreview({ layoutData, mediaUrl, hasContent }) {
   return (
     <section className="min-w-0 rounded-[24px] border border-[#c9b58d] bg-[#e8d7b3]/70 p-3 shadow-[0_24px_80px_rgba(96,62,28,0.16)] sm:rounded-[28px] sm:p-4">
       <div
-        ref={stageRef}
+        ref={viewportRef}
         className="book-scroll max-h-[78vh] overflow-y-auto overflow-x-hidden rounded-[20px] bg-[#dec79f]/45 p-2 sm:rounded-[22px] sm:p-4"
       >
         <div
@@ -181,404 +228,48 @@ export function CanvasTextPreview({ layoutData, mediaUrl, hasContent }) {
             className="block rounded-[18px] border border-[#b89563]/35 bg-[#f7f1e7]"
           />
           <div
-            className="pointer-events-none absolute"
+            className="absolute"
             style={{
               left: `${CANVAS_HORIZONTAL_PADDING}px`,
               top: `${CANVAS_TOP_PADDING}px`,
               width: `${contentWidth}px`,
               height: `${previewHeight}px`,
+              touchAction: 'pan-y',
             }}
           >
-            {hasMedia ? (
-              <button
-                type="button"
-                aria-label="Drag media obstacle"
-                className="pointer-events-auto absolute z-10 overflow-hidden touch-none cursor-grab bg-transparent active:cursor-grabbing"
+            {hasBall ? (
+              <div
+                role="presentation"
+                className="pointer-events-auto absolute z-10 cursor-grab select-none active:cursor-grabbing"
                 style={{
-                  width: `${mediaSize.width}px`,
-                  height: `${mediaSize.height}px`,
+                  width: `${ballSize.width}px`,
+                  height: `${ballSize.height}px`,
                   left: `${position.x}px`,
                   top: `${position.y}px`,
+                  touchAction: 'none',
+                  WebkitUserSelect: 'none',
+                  userSelect: 'none',
                 }}
+                onDragStart={(event) => event.preventDefault()}
                 {...dragHandleProps}
               >
-                <MediaSurface
-                  mediaElementRef={mediaElementRef}
-                  mediaKind={mediaKind}
-                  mediaUrl={mediaUrl}
-                  maxSize={mediaMaxSize}
-                  mediaRender={mediaRender}
-                  onSizeChange={setMediaSize}
-                  onRenderChange={setMediaRender}
-                  onRowIntervalsChange={setRowIntervals}
-                />
-              </button>
+                <div
+                  className="h-full w-full rounded-full border border-[#7d5a2d]/55"
+                  style={{
+                    background:
+                      'radial-gradient(circle at 32% 32%, #fff1bf 0%, #ffd970 28%, #d79c32 65%, #9a5c10 100%)',
+                    boxShadow: '0 8px 20px rgba(154, 92, 16, 0.24)',
+                  }}
+                  aria-hidden="true"
+                >
+                  <div className="h-full w-full rounded-full border-4 border-[#fff2bd]/80" />
+                </div>
+              </div>
             ) : null}
           </div>
         </div>
         </div>
       </div>
     </section>
-  )
-}
-
-function fitMediaSize(width, height, maxSize = 220) {
-  const maxWidth = maxSize
-  const maxHeight = maxSize
-
-  if (!width || !height) {
-    return { width: 170, height: 170 }
-  }
-
-  const scale = Math.min(maxWidth / width, maxHeight / height, 1)
-
-  return {
-    width: Math.max(1, Math.round(width * scale)),
-    height: Math.max(1, Math.round(height * scale)),
-  }
-}
-
-function getPixelIndex(width, x, y) {
-  return (y * width + x) * 4
-}
-
-function estimateBackgroundColor(data, width, height) {
-  const samples = []
-
-  for (let x = 0; x < width; x += 1) {
-    samples.push(getPixelIndex(width, x, 0))
-    samples.push(getPixelIndex(width, x, height - 1))
-  }
-
-  for (let y = 1; y < height - 1; y += 1) {
-    samples.push(getPixelIndex(width, 0, y))
-    samples.push(getPixelIndex(width, width - 1, y))
-  }
-
-  let red = 0
-  let green = 0
-  let blue = 0
-  let count = 0
-
-  for (const index of samples) {
-    const alpha = data[index + 3]
-
-    if (alpha <= 8) continue
-    red += data[index]
-    green += data[index + 1]
-    blue += data[index + 2]
-    count += 1
-  }
-
-  if (count === 0) {
-    return { r: 255, g: 255, b: 255 }
-  }
-
-  return {
-    r: red / count,
-    g: green / count,
-    b: blue / count,
-  }
-}
-
-function getForegroundMask(data, width, height) {
-  const background = estimateBackgroundColor(data, width, height)
-  const mask = new Uint8Array(width * height)
-  const colorThreshold = 52
-  const alphaThreshold = 8
-
-  for (let y = 0; y < height; y += 1) {
-    for (let x = 0; x < width; x += 1) {
-      const index = getPixelIndex(width, x, y)
-      const alpha = data[index + 3]
-
-      if (alpha <= alphaThreshold) continue
-
-      const red = data[index]
-      const green = data[index + 1]
-      const blue = data[index + 2]
-      const colorDistance = Math.hypot(
-        red - background.r,
-        green - background.g,
-        blue - background.b,
-      )
-
-      if (alpha >= 220 || colorDistance >= colorThreshold) {
-        mask[y * width + x] = 1
-      }
-    }
-  }
-
-  return mask
-}
-
-function extractLargestComponent(mask, width, height) {
-  const visited = new Uint8Array(width * height)
-  let bestPixels = null
-
-  for (let start = 0; start < mask.length; start += 1) {
-    if (!mask[start] || visited[start]) continue
-
-    const queue = [start]
-    const pixels = []
-    visited[start] = 1
-
-    while (queue.length > 0) {
-      const index = queue.pop()
-      pixels.push(index)
-
-      const x = index % width
-      const y = Math.floor(index / width)
-      const neighbors = [
-        [x - 1, y],
-        [x + 1, y],
-        [x, y - 1],
-        [x, y + 1],
-      ]
-
-      for (const [nextX, nextY] of neighbors) {
-        if (nextX < 0 || nextY < 0 || nextX >= width || nextY >= height) continue
-
-        const nextIndex = nextY * width + nextX
-
-        if (!mask[nextIndex] || visited[nextIndex]) continue
-        visited[nextIndex] = 1
-        queue.push(nextIndex)
-      }
-    }
-
-    if (!bestPixels || pixels.length > bestPixels.length) {
-      bestPixels = pixels
-    }
-  }
-
-  return bestPixels
-}
-
-function measureImageMask(image, maxSize) {
-  const cropPadding = 4
-  const fullSize = fitMediaSize(image.naturalWidth, image.naturalHeight, maxSize)
-  const canvas = document.createElement('canvas')
-  canvas.width = fullSize.width
-  canvas.height = fullSize.height
-  const context = canvas.getContext('2d', { willReadFrequently: true })
-
-  if (!context) {
-    return {
-      size: fullSize,
-      render: {
-        width: fullSize.width,
-        height: fullSize.height,
-        offsetX: 0,
-        offsetY: 0,
-      },
-      rowIntervals: [],
-    }
-  }
-
-  context.clearRect(0, 0, fullSize.width, fullSize.height)
-  context.drawImage(image, 0, 0, fullSize.width, fullSize.height)
-
-  try {
-    const { data } = context.getImageData(0, 0, fullSize.width, fullSize.height)
-    const foregroundMask = getForegroundMask(data, fullSize.width, fullSize.height)
-    const component = extractLargestComponent(
-      foregroundMask,
-      fullSize.width,
-      fullSize.height,
-    )
-    const intervals = Array.from({ length: fullSize.height }, () => null)
-    let minX = fullSize.width
-    let maxX = -1
-    let minY = fullSize.height
-    let maxY = -1
-
-    for (const pixel of component ?? []) {
-      const x = pixel % fullSize.width
-      const y = Math.floor(pixel / fullSize.width)
-      const current = intervals[y]
-
-      if (current) {
-        current.left = Math.min(current.left, x)
-        current.right = Math.max(current.right, x + 1)
-      } else {
-        intervals[y] = { left: x, right: x + 1 }
-      }
-
-      minX = Math.min(minX, x)
-      maxX = Math.max(maxX, x + 1)
-      minY = Math.min(minY, y)
-      maxY = Math.max(maxY, y + 1)
-    }
-
-    if (maxX === -1 || maxY === -1) {
-      return {
-        size: fullSize,
-        render: {
-          width: fullSize.width,
-          height: fullSize.height,
-          offsetX: 0,
-          offsetY: 0,
-        },
-        rowIntervals: [],
-      }
-    }
-
-    const paddedIntervals = intervals.map((interval) =>
-      interval
-        ? {
-            left: Math.max(0, interval.left - cropPadding),
-            right: Math.min(fullSize.width, interval.right + cropPadding),
-          }
-        : null,
-    )
-
-    return {
-      size: fullSize,
-      render: {
-        width: fullSize.width,
-        height: fullSize.height,
-        offsetX: 0,
-        offsetY: 0,
-      },
-      rowIntervals: paddedIntervals,
-    }
-  } catch {
-    return {
-      size: fullSize,
-      render: {
-        width: fullSize.width,
-        height: fullSize.height,
-        offsetX: 0,
-        offsetY: 0,
-      },
-      rowIntervals: [],
-    }
-  }
-}
-
-function MediaSurface({
-  mediaElementRef,
-  mediaKind,
-  mediaUrl,
-  maxSize,
-  mediaRender,
-  onSizeChange,
-  onRenderChange,
-  onRowIntervalsChange,
-}) {
-  const measurementKeyRef = useRef('')
-
-  useEffect(() => {
-    if (mediaKind !== 'image') {
-      onRowIntervalsChange([])
-      onRenderChange({
-        width: 170,
-        height: 170,
-        offsetX: 0,
-        offsetY: 0,
-      })
-    }
-  }, [mediaKind, mediaUrl, onRenderChange, onRowIntervalsChange])
-
-  useEffect(() => {
-    if (mediaKind !== 'image' || !mediaUrl) return undefined
-
-    let frameId = null
-
-    const syncMeasurement = () => {
-      const image = mediaElementRef.current
-
-      if (image?.complete && image.naturalWidth && image.naturalHeight) {
-        const measurement = measureImageMask(image, maxSize)
-        const key = [
-          measurement.size.width,
-          measurement.size.height,
-          measurement.render.offsetX,
-          measurement.render.offsetY,
-          measurement.rowIntervals
-            .map((interval) => (interval ? `${interval.left}-${interval.right}` : '_'))
-            .join(';'),
-        ].join('|')
-
-        if (key !== measurementKeyRef.current) {
-          measurementKeyRef.current = key
-          onSizeChange(measurement.size)
-          onRenderChange(measurement.render)
-          onRowIntervalsChange(measurement.rowIntervals)
-        }
-      }
-
-      frameId = requestAnimationFrame(syncMeasurement)
-    }
-
-    syncMeasurement()
-
-    return () => {
-      if (frameId !== null) cancelAnimationFrame(frameId)
-      measurementKeyRef.current = ''
-    }
-  }, [
-    mediaElementRef,
-    mediaKind,
-    mediaUrl,
-    maxSize,
-    onRenderChange,
-    onRowIntervalsChange,
-    onSizeChange,
-  ])
-
-  if (mediaKind === 'image' && mediaUrl) {
-    return (
-      <img
-        ref={mediaElementRef}
-        src={mediaUrl}
-        alt=""
-        className="pointer-events-none absolute max-w-none select-none"
-        draggable="false"
-        crossOrigin="anonymous"
-        style={{
-          width: `${mediaRender.width}px`,
-          height: `${mediaRender.height}px`,
-          left: `${mediaRender.offsetX}px`,
-          top: `${mediaRender.offsetY}px`,
-        }}
-      />
-    )
-  }
-
-  if (mediaKind === 'video' && mediaUrl) {
-    return (
-      <video
-        ref={mediaElementRef}
-        src={mediaUrl}
-        className="pointer-events-none absolute inset-0 h-full w-full select-none"
-        autoPlay
-        muted
-        loop
-        playsInline
-        onLoadedMetadata={(event) => {
-          const nextSize = fitMediaSize(
-            event.currentTarget.videoWidth,
-            event.currentTarget.videoHeight,
-            maxSize,
-          )
-          onSizeChange(nextSize)
-          onRenderChange({
-            width: nextSize.width,
-            height: nextSize.height,
-            offsetX: 0,
-            offsetY: 0,
-          })
-          onRowIntervalsChange([])
-        }}
-      />
-    )
-  }
-
-  return (
-    <div className="flex h-full w-full items-center justify-center border border-dashed border-white/20 bg-transparent px-4 text-center text-xs leading-5 text-white/80">
-      Paste an image, GIF, or video URL
-    </div>
   )
 }
