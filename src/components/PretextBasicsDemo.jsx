@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react'
+import { DemoAccordion } from './DemoAccordion'
 import { usePretextLayout } from '../hooks/usePretextLayout'
 import { PRETEXT_LINE_HEIGHT } from '../lib/pretext'
 
@@ -33,29 +34,13 @@ export function PretextBasicsDemo() {
   const codeSnippet = useMemo(() => buildCodeSnippet(width), [width])
 
   return (
-    <section className="rounded-[28px] border border-[#d6c39a] bg-white/72 p-5 shadow-[0_24px_80px_rgba(108,73,37,0.08)]">
-      <div className="flex items-center gap-3">
-        <span className="rounded-full bg-indigo-100 px-3 py-1 text-[12px] font-semibold uppercase tracking-[0.16em] text-indigo-700">
-          Demo 1
-        </span>
-      </div>
-
-      <h2 className="mt-4 text-3xl font-semibold tracking-tight text-slate-900">
-        Height Without DOM
-      </h2>
-      <p className="mt-3 max-w-5xl text-lg leading-8 text-slate-600">
-        Measure text height using pure arithmetic, no DOM layout and no reflow.
-        <code className="mx-1 rounded-md border border-indigo-200 bg-indigo-50 px-2 py-1 text-sm text-indigo-700">
-          prepareWithSegments()
-        </code>
-        caches the text once, and
-        <code className="mx-1 rounded-md border border-indigo-200 bg-indigo-50 px-2 py-1 text-sm text-indigo-700">
-          layoutWithLines()
-        </code>
-        is the cheap hot path.
-      </p>
-
-      <div className="mt-8 grid gap-8 lg:grid-cols-[minmax(0,1.1fr)_minmax(320px,0.9fr)]">
+    <DemoAccordion
+      badge="Demo 1"
+      title="Height Without DOM"
+      summary="Measure text height using pure arithmetic, no DOM layout and no reflow. prepareWithSegments() caches once, and layoutWithLines() is the cheap hot path."
+      defaultOpen
+    >
+      <div className="grid gap-8 lg:grid-cols-[minmax(0,1.1fr)_minmax(320px,0.9fr)]">
         <div>
           <div>
             <p className="text-lg font-semibold text-slate-900">Width</p>
@@ -107,7 +92,7 @@ export function PretextBasicsDemo() {
       <pre className="mt-8 overflow-auto rounded-[20px] bg-[#1f1b46] px-5 py-5 text-[14px] leading-7 text-indigo-100">
         <code>{codeSnippet}</code>
       </pre>
-    </section>
+    </DemoAccordion>
   )
 }
 

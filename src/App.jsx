@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react'
 import { CanvasTextPreview } from './components/CanvasTextPreview'
 import { PretextBasicsDemo } from './components/PretextBasicsDemo'
+import { PretextFlowBallDemo } from './components/PretextFlowBallDemo'
 import { PdfUploader } from './components/PdfUploader'
 import { usePdfUpload } from './hooks/usePdfUpload'
 import { extractDropCapContent, getDropCapInset } from './lib/bookLayout'
@@ -12,7 +13,7 @@ import {
 } from './lib/pretext'
 
 function App() {
-  const [mediaUrl, setMediaUrl] = useState('https://media.tenor.com/84a3jKelmCAAAAAj/diablo-slime.gif')
+  const [mediaUrl, setMediaUrl] = useState('https://media.tenor.com/KeqbuC5yrgUAAAAi/deal-with-it-trailblazer.gif')
   const { metadata, fullText, error, isExtracting, onFileChange } = usePdfUpload()
   const { dropCap, bodyText } = useMemo(
     () => extractDropCapContent(fullText ?? ''),
@@ -56,6 +57,7 @@ function App() {
               hasContent={Boolean(bodyText || dropCap)}
             />
             <PretextBasicsDemo />
+            <PretextFlowBallDemo />
           </div>
         </section>
       </div>

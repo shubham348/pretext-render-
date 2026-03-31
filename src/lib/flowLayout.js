@@ -2,6 +2,10 @@ const MIN_LINE_WIDTH = 48
 const SPLIT_MIN_WIDTH = 72
 const OBJECT_PADDING = 8
 
+function getObstaclePadding(obstacle) {
+  return obstacle?.padding ?? OBJECT_PADDING
+}
+
 function lineIntersectsObject(y, lineHeight, object) {
   if (!object) return false
 
@@ -20,6 +24,8 @@ function getBlockedInterval(width, y, lineHeight, obstacle) {
     return null
   }
 
+  const padding = getObstaclePadding(obstacle)
+
   if (!lineIntersectsObject(y, lineHeight, obstacle)) {
     return null
   }
@@ -31,8 +37,8 @@ function getBlockedInterval(width, y, lineHeight, obstacle) {
 
     if (interval) {
       return {
-        left: clamp(obstacle.x + interval.left - OBJECT_PADDING, 0, width),
-        right: clamp(obstacle.x + interval.right + OBJECT_PADDING, 0, width),
+        left: clamp(obstacle.x + interval.left - padding, 0, width),
+        right: clamp(obstacle.x + interval.right + padding, 0, width),
       }
     }
 
@@ -40,8 +46,8 @@ function getBlockedInterval(width, y, lineHeight, obstacle) {
   }
 
   return {
-    left: clamp(obstacle.x - OBJECT_PADDING, 0, width),
-    right: clamp(obstacle.x + obstacle.width + OBJECT_PADDING, 0, width),
+    left: clamp(obstacle.x - padding, 0, width),
+    right: clamp(obstacle.x + obstacle.width + padding, 0, width),
   }
 }
 
