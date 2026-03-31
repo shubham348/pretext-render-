@@ -1,0 +1,4 @@
+export const CANVAS_FRAME_PADDING = 16
+export const CANVAS_HORIZONTAL_PADDING = 24
+export const CANVAS_TOP_PADDING = 36
+export const CANVAS_BOTTOM_PADDING = 28

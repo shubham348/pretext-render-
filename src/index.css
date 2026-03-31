@@ -1,0 +1,63 @@
+@import url("https://fonts.googleapis.com/css2?family=Fira+Code:wght@300..700&family=Meddon&family=MedievalSharp&display=swap");
+@import "tailwindcss";
+
+:root {
+  color: #1c1917;
+  background: #f8f4ec;
+  font-family: "Fira Code", "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  margin: 0;
+}
+
+button,
+input,
+textarea {
+  font: inherit;
+}
+
+#root {
+  min-height: 100vh;
+}
+
+.book-scroll {
+  scrollbar-width: thin;
+  scrollbar-color: #8e6a3d #e8d7b3;
+}
+
+.book-scroll::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+.book-scroll::-webkit-scrollbar-track {
+  background: rgba(232, 215, 179, 0.9);
+  border-radius: 999px;
+}
+
+.book-scroll::-webkit-scrollbar-thumb {
+  background: linear-gradient(180deg, #b8915f 0%, #866239 100%);
+  border: 2px solid rgba(232, 215, 179, 0.92);
+  border-radius: 999px;
+}
+
+.book-scroll::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(180deg, #a67d4d 0%, #75542f 100%);
+}
+
+.book-scroll::-webkit-scrollbar-corner {
+  background: rgba(232, 215, 179, 0.9);
+}
