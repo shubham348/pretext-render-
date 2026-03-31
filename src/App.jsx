@@ -1,5 +1,6 @@
 import { useMemo, useState } from 'react'
 import { CanvasTextPreview } from './components/CanvasTextPreview'
+import { PretextBasicsDemo } from './components/PretextBasicsDemo'
 import { PdfUploader } from './components/PdfUploader'
 import { usePdfUpload } from './hooks/usePdfUpload'
 import { extractDropCapContent, getDropCapInset } from './lib/bookLayout'
@@ -54,6 +55,7 @@ function App() {
               mediaUrl={mediaUrl}
               hasContent={Boolean(bodyText || dropCap)}
             />
+            <PretextBasicsDemo />
           </div>
         </section>
       </div>
